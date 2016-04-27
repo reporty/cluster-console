@@ -20,7 +20,7 @@ object Page {
         val prod = ConfigFactory.load().getBoolean("clusterConsole.productionMode")
         if (prod) {
           body(onload := "ClusterConsoleApp().main()")(
-            script(src := "/js/cluster-console-jsdeps.min.js"),
+            script(src := "/js/cluster-console-jsdeps.js"),
             script(src := "/js/cluster-console-opt.js")
           )
         } else {

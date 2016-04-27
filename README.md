@@ -68,11 +68,24 @@ To get started, we'll first need to boot the Spray HTTP Server (for running the 
 ```
     
 ## Running the Sample Cluster
+
   A console alone isn't enough: we'll need some Akka nodes to visualize. To do this, we need a running Akka Cluster. 
 
   To boot up the sample Akka cluster, and test the behavior of the console, you have two options:
   - [Start It Locally with Multiple JVMs](#booting-the-sample-cluster-locally-with-multiple-jvms)
   - [Start It With Multiple VMs, Using Vagrant](#booting-the-sample-cluster-in-multiple-vms-with-vagrant)
+  
+#### Building and running Cluster Console
+
+```bash
+activator
+> release
+> dist
+cd ClusterConsole/jvm/target/universal/
+unzip cluster-console-0.1.zip
+sudo chmod +x cluster-console-0.1/bin/cluster-console
+sudo ./cluster-console-0.1/bin/cluster-console
+```
     
 #### Booting The Sample Cluster Locally with Multiple JVMs 
     
