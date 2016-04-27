@@ -179,3 +179,6 @@ lazy val sampleCluster = (project in file("sampleCluster"))
     scalaVersion := "2.11.7",
     libraryDependencies ++= Settings.jvmDependencies.value
   ).enablePlugins(JavaServerAppPackaging, JDebPackaging)
+
+
+fork in run := true
