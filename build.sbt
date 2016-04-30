@@ -14,7 +14,7 @@ name := "cluster-console"
 
 version := "1.1"
 
-scalaVersion := "2.11.7"
+scalaVersion := "2.11.8"
 
 
 scalaJSStage in Global := FastOptStage
