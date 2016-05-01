@@ -101,29 +101,51 @@ trait ClusterConsoleRoutes extends ActorLogging { this: Actor =>
 
 }
 
-class ClusterDiscoveryService(context: ActorContext, socketPublisherRouter: ActorRef) extends Api {
-
-  implicit val timeout = Timeout(3 seconds)
-
-  val discovering: MutableMap[ActorRef, DiscoveryBegun] = MutableMap.empty
-
-  val discoveryTracker: ActorRef =
+class ClusterDiscoveryService(context: ActorContext, socketPublisherRouter: ActorRef) extends Api 
+{
+    implicit val timeout = Timeout(3 seconds)
+    val discovering: MutableMap[ActorRef, DiscoveryBegun] = MutableMap.empty
+    val discoveryTracker: ActorRef =
     context.system.actorOf(DiscoveryTracker.props(socketPublisherRouter))
 
-  def discover(systemName: String, selfHost: String, seedNodes: List[HostPort]): Option[DiscoveryBegun] = {
-
-    val discovered = getDiscoveredFromTracked
-    if (!discovered.exists(_.system == systemName)) {
-      val newSystemActor = context.system.actorOf(
-        ClusterAware.props(systemName, selfHost, seedNodes, discoveryTracker)
-      )
-      val value = DiscoveryBegun(systemName, seedNodes)
-      discovering += newSystemActor -> value
-      context.watch(newSystemActor)
-      Some(value)
-    } else None
-
-  }
+    def discover(systemName: String, selfHost: String, seedNodes: List[HostPort]): Option[DiscoveryBegun] = 
+    {
+        val prod = context.system.settings.config.getBoolean("clusterConsole.productionMode")
+        val clusterAwareSelfHost = if (selfHost.isEmpty())
+        {
+            prod match
+            {
+                case true => "0.0.0.0"
+                case false => "127.0.0.1"
+            }
+        }
+        else
+        {
+            selfHost
+        }
+        
+        val clusterAwareSelfPort = prod match { case true => 2552 case false => 2551 }
+        
+        val discovered = getDiscoveredFromTracked
+        if (!discovered.exists(_.system == systemName)) 
+        {
+            val newSystemActor = context.system.actorOf(ClusterAware.props(
+                    systemName, 
+                    clusterAwareSelfHost, 
+                    clusterAwareSelfPort, 
+                    seedNodes, 
+                    discoveryTracker))
+                    
+            val value = DiscoveryBegun(systemName, seedNodes)
+            discovering += newSystemActor -> value
+            context.watch(newSystemActor)
+            Some(value)
+        } 
+        else 
+        {
+          None
+        }
+    }
 
   def getDiscovering(): Seq[DiscoveryBegun] = {
     discovering.values.toList.filter(db => !getDiscovered().exists(dc => db.system == dc.system))

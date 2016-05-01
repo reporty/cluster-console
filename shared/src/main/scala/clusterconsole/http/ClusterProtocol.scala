@@ -79,7 +79,7 @@ case class HostPortForm(host: String, port: String)
 case class ClusterForm(name: String, selfHost:String, seeds: List[HostPortForm])
 
 object ClusterForm {
-  def initial: ClusterForm = ClusterForm("ClusterSystem", "0.0.0.0", List(HostPortForm("", "2552")))
+  def initial: ClusterForm = ClusterForm("ClusterSystem", "", List(HostPortForm("", "2552")))
 }
 
 

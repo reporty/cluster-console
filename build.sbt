@@ -154,12 +154,11 @@ lazy val js: Project = sharedProject.js.settings(
     IO.copyFile(base, (classDirectory in Compile).value / "web" / "js" / base.getName)
     base
   }
-).settings(scalariformSettings).enablePlugins(SbtWeb)
+).enablePlugins(SbtWeb)
 
 
 // instantiate the JVM project for SBT with some additional settings
 lazy val jvm: Project = sharedProject.jvm.settings(js2jvmSettings: _*)
-  .settings(scalariformSettings)
   .settings(
   // scala.js output is directed under "web/js" dir in the jvm project
   scalajsOutputDir := (classDirectory in Compile).value / "web" / "js",
@@ -172,7 +171,6 @@ lazy val jvm: Project = sharedProject.jvm.settings(js2jvmSettings: _*)
 
 
 lazy val sampleCluster = (project in file("sampleCluster"))
-  .settings(scalariformSettings)
   .settings(
     name := "samplecluster",
     version  := "1.0.0",

@@ -13,8 +13,8 @@ case class IsDiscovered(system: DiscoveredCluster)
 
 object ClusterAware {
 
-  def props(systemName: String, selfHost: String, seedNodes: List[HostPort], parent: ActorRef): Props =
-    Props(new ClusterAware(systemName, selfHost, seedNodes, parent))
+  def props(systemName: String, selfHost: String, selfPort : Int, seedNodes: List[HostPort], parent: ActorRef): Props =
+    Props(new ClusterAware(systemName, selfHost, selfPort, seedNodes, parent))
 
   def toClusterMember(m: Member, nodeState: NodeState): ClusterMember =
     ClusterMember(
@@ -27,10 +27,9 @@ object ClusterAware {
 
 class ClusterAware(systemName: String,
     selfHost: String,
+    selfPort : Int,
     seedNodes: List[HostPort],
     parent: ActorRef) extends Actor with ActorLogging {
-
-  val selfPort = 2552
 
   val akkaConf =
     s"""akka.remote.netty.tcp.hostname="$selfHost"
