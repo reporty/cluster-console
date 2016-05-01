@@ -46,5 +46,10 @@
 			<type>2</type>
 			<location>C:/Workspace/ScalaWorkspace/ClusterConsole/shared/src/test/scala-2.11</location>
 		</link>
+		<link>
+			<name>src/main/resources/web</name>
+			<type>2</type>
+			<location>C:/Workspace/ScalaWorkspace/ClusterConsole/jvm/target/scala-2.11/classes/web</location>
+		</link>
 	</linkedResources>
 </projectDescription>
