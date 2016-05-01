@@ -18,6 +18,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ Await, Future }
 import scala.concurrent.duration._
 import upickle.default._
+import clusterconsole.utils.Network
 
 trait ClusterConsoleRoutes extends ActorLogging { this: Actor =>
 
@@ -115,7 +116,7 @@ class ClusterDiscoveryService(context: ActorContext, socketPublisherRouter: Acto
         {
             prod match
             {
-                case true => "0.0.0.0"
+                case true => Network.getLocalAddress
                 case false => "127.0.0.1"
             }
         }
