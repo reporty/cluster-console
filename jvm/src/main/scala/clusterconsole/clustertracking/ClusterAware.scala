@@ -30,12 +30,11 @@ class ClusterAware(systemName: String,
     seedNodes: List[HostPort],
     parent: ActorRef) extends Actor with ActorLogging {
 
-  val selfPort = 0
+  val selfPort = 2552
 
   val akkaConf =
     s"""akka.remote.netty.tcp.hostname="$selfHost"
         |akka.remote.netty.tcp.port=$selfPort
-        |auto-down-unreachable-after = 5s
         |akka.cluster.roles = [clusterconsole]
         |""".stripMargin
 
