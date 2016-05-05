@@ -72,42 +72,49 @@ class ClusterAware(systemName: String,
   def receive: Receive = trackingMembers(Set.empty[Member])
 
   def trackingMembers(members: Set[Member]): Receive = {
-
-    case m @ CurrentClusterState(clusterMembers, _, _, _, _) =>
-      context.become(
-        trackingMembers(clusterMembers)
-      )
-
-    case MemberUp(m) =>
-      // ignore ourself for console view
-      if (m.roles != Set("clusterconsole")) {
-        context.become(
-          trackingMembers(members + m)
-        )
-        def clusterMember(m: Member) =
-          ClusterAware.toClusterMember(m, Up)
-
-        parent ! ClusterMemberUp(systemName, clusterMember(m))
-
-        parent ! IsDiscovered(
-          DiscoveredCluster(systemName, seedNodes, "", (members + m).map(clusterMember), Seq.empty[RoleDependency])
-        )
-      }
-
-    case UnreachableMember(m) =>
-      if (m.roles != Set("clusterconsole"))
-        parent ! ClusterMemberUnreachable(systemName, ClusterAware.toClusterMember(m, Unreachable))
-
-    case MemberRemoved(m, previousStatus) =>
-      if (m.roles != Set("clusterconsole")) {
-        parent ! ClusterMemberRemoved(systemName, ClusterAware.toClusterMember(m, Removed))
-      }
-
-    case MemberExited(m) =>
-      if (m.roles != Set("clusterconsole")) {
-        parent ! ClusterMemberExited(systemName, ClusterAware.toClusterMember(m, Exited))
-      }
-
+      
+    case event => {
+        log.info(event.toString()) 
+        event match 
+        {
+            case m @ CurrentClusterState(clusterMembers, _, _, _, _) =>
+              context.become(
+                trackingMembers(clusterMembers)
+              )
+        
+            case MemberUp(m) =>
+              // ignore ourself for console view
+              if (m.roles != Set("clusterconsole")) {
+                context.become(
+                  trackingMembers(members + m)
+                )
+                def clusterMember(m: Member) =
+                  ClusterAware.toClusterMember(m, Up)
+        
+                parent ! ClusterMemberUp(systemName, clusterMember(m))
+        
+                parent ! IsDiscovered(
+                  DiscoveredCluster(systemName, seedNodes, "", (members + m).map(clusterMember), Seq.empty[RoleDependency])
+                )
+              }
+        
+            case UnreachableMember(m) =>
+              if (m.roles != Set("clusterconsole"))
+                parent ! ClusterMemberUnreachable(systemName, ClusterAware.toClusterMember(m, Unreachable))
+        
+            case MemberRemoved(m, previousStatus) =>
+              if (m.roles != Set("clusterconsole")) {
+                parent ! ClusterMemberRemoved(systemName, ClusterAware.toClusterMember(m, Removed))
+              }
+        
+            case MemberExited(m) =>
+              if (m.roles != Set("clusterconsole")) {
+                parent ! ClusterMemberExited(systemName, ClusterAware.toClusterMember(m, Exited))
+              }
+              
+            case LeaderChanged(m) => { }
+        }  
+    }
   }
-
+  
 }
