@@ -44,77 +44,88 @@ class ClusterAware(systemName: String,
   lazy val cluster = Cluster(newSystem)
 
   /** subscribe to cluster events in order to track workers */
-  override def preStart() = {
-    val addresses: immutable.Seq[Address] =
-      seedNodes.map(e => Address("akka.tcp", systemName, e.host, e.port))
+  override def preStart() = 
+  {
+    val addresses: immutable.Seq[Address] = seedNodes.map(e => Address("akka.tcp", systemName, e.host, e.port))
 
     // todo - track cluster metrics
     cluster.subscribe(self,
       initialStateMode = InitialStateAsEvents,
-      classOf[MemberUp],
-      classOf[UnreachableMember],
-      classOf[MemberRemoved],
-      classOf[MemberExited],
-      classOf[LeaderChanged]
-    )
+      classOf[MemberEvent], 
+      classOf[ReachabilityEvent],
+      classOf[LeaderChanged])
 
     cluster.joinSeedNodes(addresses)
-
   }
 
-  override def postStop() = {
+  override def postStop() = 
+  {
     cluster.unsubscribe(self)
-    cluster.leave(
-      Address("akka.tcp", systemName, selfHost, selfPort)
-    )
+    cluster.leave(Address("akka.tcp", systemName, selfHost, selfPort))
   }
 
   def receive: Receive = trackingMembers(Set.empty[Member])
 
-  def trackingMembers(members: Set[Member]): Receive = {
-      
-    case event => {
+  def trackingMembers(members: Set[Member]): Receive = 
+  {  
+    case event => 
+    {
         log.info(event.toString()) 
         event match 
         {
             case m @ CurrentClusterState(clusterMembers, _, _, _, _) =>
-              context.become(
-                trackingMembers(clusterMembers)
-              )
+            {
+                context.become(trackingMembers(clusterMembers))
+            }
         
-            case MemberUp(m) =>
-              // ignore ourself for console view
-              if (m.roles != Set("clusterconsole")) {
-                context.become(
-                  trackingMembers(members + m)
-                )
-                def clusterMember(m: Member) =
-                  ClusterAware.toClusterMember(m, Up)
-        
+            case MemberUp(m) if (m.roles != Set("clusterconsole")) =>
+            {
+                context.become(trackingMembers(members + m))
+                def clusterMember(m: Member) = ClusterAware.toClusterMember(m, Up)
                 parent ! ClusterMemberUp(systemName, clusterMember(m))
+                parent ! IsDiscovered(DiscoveredCluster(systemName, seedNodes, "", (members + m).map(clusterMember), Seq.empty[RoleDependency]))
+            }
         
-                parent ! IsDiscovered(
-                  DiscoveredCluster(systemName, seedNodes, "", (members + m).map(clusterMember), Seq.empty[RoleDependency])
-                )
-              }
-        
-            case UnreachableMember(m) =>
-              if (m.roles != Set("clusterconsole"))
+            case UnreachableMember(m) if (m.roles != Set("clusterconsole")) =>
+            {
                 parent ! ClusterMemberUnreachable(systemName, ClusterAware.toClusterMember(m, Unreachable))
+            }
+            
+            case ReachableMember(m) if (m.roles != Set("clusterconsole")) =>
+            {
+                parent ! ClusterMemberUp(systemName, ClusterAware.toClusterMember(m, Up))
+            }
         
-            case MemberRemoved(m, previousStatus) =>
-              if (m.roles != Set("clusterconsole")) {
+            case MemberRemoved(m, previousStatus) if (m.roles != Set("clusterconsole")) =>
+            {
                 parent ! ClusterMemberRemoved(systemName, ClusterAware.toClusterMember(m, Removed))
-              }
+            }
         
-            case MemberExited(m) =>
-              if (m.roles != Set("clusterconsole")) {
+            case MemberExited(m) if (m.roles != Set("clusterconsole")) =>
+            {
                 parent ! ClusterMemberExited(systemName, ClusterAware.toClusterMember(m, Exited))
-              }
+            }
               
             case LeaderChanged(m) => { }
+            
+            case _ => { /*NOTE:: AD - clusterconsole member events */ }
         }  
     }
   }
-  
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
